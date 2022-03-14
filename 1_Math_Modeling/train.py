@@ -1,5 +1,3 @@
-from locale import normalize
-from turtle import forward
 import numpy as np
 import matplotlib.pyplot as plt
 
