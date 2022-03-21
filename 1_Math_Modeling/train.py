@@ -1,5 +1,3 @@
-from locale import normalize
-from turtle import forward
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -29,7 +27,7 @@ dataloader_dev = DataLoader(dataset=DummyDataset("validation_data.csv", input_co
 
 # Build model
 model = Sequential(
-    Linear(in_features=2, out_features=3),
+    Linear(2, 3),
     Tanh(),
     Linear(3, 3),
     Tanh(),
@@ -39,6 +37,7 @@ model = Sequential(
 print(model)
 
 # Define loss
+mse = MSELoss()
 class MSLELoss(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -46,34 +45,10 @@ class MSLELoss(torch.nn.Module):
         
     def forward(self, pred, actual):
         return self.mse(torch.log(pred + 1), torch.log(actual + 1))
-mse = MSELoss()
 # mse = MSLELoss()
 
 # Define optimizer
 optimizer = SGD(params=model.parameters(), lr=learning_rate)
-
-# Prepare normalization
-class TorchStandardScaler:
-    def fit(self, x):
-        self.mean = x.mean(0, keepdim=True)
-        self.std = x.std(0, unbiased=False, keepdim=True)
-  
-    def transform(self, x):
-        x -= self.mean
-        x /= (self.std + 1e-7)
-        return x
-
-    def inverse_transform(self, x):
-        x *= (self.std + 1e-7)
-        x += self.mean
-        return x
-train_set=DummyDataset("train_data.csv", input_columns, output_columns)        
-loader = DataLoader(train_set, batch_size=len(train_set), num_workers=1)
-data = next(iter(loader))
-standard_scaler = TorchStandardScaler()
-standard_scaler.fit(data[1])
-del train_set, loader, data
-
 
 # Training loop
 mse_train_overall, mse_dev_overall = [], []
@@ -126,8 +101,9 @@ if evaluate_on_test_set:
         mse_test.append(mse(y_true, y_pred).item())
     mse_test = np.mean(mse_test)
 
-print(x, y_true, y_pred)
-
+print(f"input={x.detach().numpy()}")
+print(f"ground truth={y_true.detach().numpy()}")
+print(f"predicted truth={y_pred.detach().numpy()}")
 
 # Plot the training progress and saves it as a file
 fig, ax = plt.subplots()
